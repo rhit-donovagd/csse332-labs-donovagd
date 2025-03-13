@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 struct num_seq {
@@ -51,8 +52,20 @@ struct num_seq {
  * malloc(), and strtol().
  * 
  */
-struct num_seq* alloc_num_seq(const char *start, const char *end) {
-  // Your code goes here
+struct num_seq* alloc_num_seq(const char *starts, const char *ends) {
+    int start = atoi(starts);
+    int end = atoi(ends);
+
+    struct num_seq* seq = malloc(sizeof(struct num_seq));
+    int len = end - start + 1;
+    seq->array = malloc(sizeof(int) * len);
+    seq->length = len;
+
+    for (int i = 0; i < len; i++) {
+	seq->array[i] = start + i;
+    }
+
+    return seq;
 }
 
 /**
@@ -68,7 +81,8 @@ struct num_seq* alloc_num_seq(const char *start, const char *end) {
  */
 void free_num_seq(struct num_seq *s)
 {
-  // Your code goes here
+    free(s->array);
+    free(s);
 }
 
 int main(int argc, char **argv) {
