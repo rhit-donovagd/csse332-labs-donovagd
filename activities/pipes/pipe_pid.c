@@ -27,13 +27,33 @@
 int main(int argc, char **argv) {
   pid_t pid;
 
+  int fd[2];
+  pipe(fd);
+
   pid = fork();
   if(pid == 0) {
     // child, I am the writer
+    close(fd[0]);
+
+    char data[512];
+    sprintf(data, "%d", getpid());
+    write(fd[1], data, strlen(data));
+
+    close(fd[1]);
     exit(0);
   }
 
   // parent, I am the reader
+  close(fd[1]);
+
+  char read_data[512];
+  int recv_bytes = read(fd[0], read_data, 512);
+  read_data[recv_bytes] = '\0';
+
+  printf("expected pid:  %d\n", pid);
+  printf("pid from pipe: %s\n", read_data);
+
+  close(fd[0]);
   exit(0);
 }
 
