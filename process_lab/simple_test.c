@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/wait.h>
+#include <signal.h>
+#include <string.h>
 
 #define simple_assert(message, test)                                           \
   do {                                                                         \
@@ -37,6 +40,14 @@ void add_test(char *(*test_func)()) {
   num_tests++;
 }
 
+void signal_handler(int signum) {
+    switch (signum) {
+	case SIGALRM:
+	    exit(2);
+	    break;
+    }
+}
+
 /**
  * This setup function should run before each test
  */
@@ -49,6 +60,13 @@ void setup(void) {
     }
   }
 
+  struct sigaction sigalrm_action;
+  sigalrm_action.sa_handler = signal_handler;
+  sigemptyset(&sigalrm_action.sa_mask);
+  sigalrm_action.sa_flags = SA_RESTART;
+
+  sigaction(SIGALRM, &sigalrm_action, NULL);
+
   /* imagine this function does a lot of other complicated setup that takes a
    * long time. */
   usleep(3000000);
@@ -57,7 +75,70 @@ void setup(void) {
 /**
  * Run all the test in the test suite.
  */
-void run_all_tests() { /* TODO: Add your code here. */
+void run_all_tests() {
+    setup();
+
+    int children[num_tests];
+    int pipes[num_tests];
+
+    for (int i = 0; i < num_tests; i++) {
+	int fd[2];
+	pipe(fd);
+
+	children[i] = fork();
+	if (children[i] == 0) {
+	    close(fd[0]);
+
+	    alarm(3);
+
+	    char* test_result = test_funcs[i]();
+
+	    if (test_result == TEST_PASSED) {
+		close(fd[1]);
+		exit(0);
+	    } else {
+		write(fd[1], test_result, strlen(test_result));
+		close(fd[1]);
+		exit(1);
+	    }
+	} else {
+	    close(fd[1]);
+	    pipes[i] = fd[0];
+	}
+    }
+
+    char err_msg[512];
+    int bytes_read;
+    int wstatus;
+    for (int i = 0; i < num_tests; i++) {
+	waitpid(children[i], &wstatus, 0);
+
+	if (WIFEXITED(wstatus)) {
+	    int exit_status = WEXITSTATUS(wstatus);
+	    switch (exit_status) {
+		case 0:
+		    printf("Test Passed\n");
+		    break;
+		case 1:
+		    bytes_read = read(pipes[i], err_msg, 512);
+		    err_msg[bytes_read] = '\0';
+
+		    printf("Test Failed: %s\n", err_msg);
+		    break;
+		case 2:
+		    printf("Test Timed Out\n");
+		    break;
+		default:
+		    printf("Test exited with unknown status `%d`\n", exit_status);
+	    }
+	} else {
+	    printf("Test Crashed\n");
+	}
+
+	close(pipes[i]);
+    }
+
+
 }
 
 char *test1() {
@@ -145,7 +226,7 @@ int main(int argc, char **argv) {
   add_test(test1);
   add_test(test2);
   add_test(test3);
-  /* add_test(test4); */
-  /* add_test(test5); */
+  add_test(test4);
+  add_test(test5);
   run_all_tests();
 }
