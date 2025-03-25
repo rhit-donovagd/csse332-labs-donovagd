@@ -1,0 +1,23 @@
++r -t 0
+Starting program: /home/donovagd/332-labs/debug/student.bin -t 0
+
+Program received signal SIGSEGV, Segmentation fault.
+0x0000555555555472 in main (argc=3, argv=0x7fffffffe1c8) at student.c:116
+116	          students[i]->grades[j] = (i + j) << 1;
++p students
+$1 = {0x5555555592a0, 0x0, 0x0, 0x0, 0x0}
++p i
+$2 = 0
++p students[i]
+$3 = (struct student *) 0x5555555592a0
++p students[i]->grades
+$4 = (int *) 0x0
++k
+[Inferior 1 (process 5271) killed]
++r -t 0
+`/home/donovagd/332-labs/debug/student.bin' has changed; re-reading symbols.
+Starting program: /home/donovagd/332-labs/debug/student.bin -t 0
+warning: Probes-based dynamic linker interface failed.
+Reverting to original interface.
+[Inferior 1 (process 5294) exited normally]
++q

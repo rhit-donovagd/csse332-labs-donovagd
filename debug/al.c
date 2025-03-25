@@ -55,6 +55,7 @@ struct array_list *alloc_al(const char *name, int size)
 
   strcpy(al->name, name);
   al->size = size;
+  al->array = malloc(sizeof(int) * al->size);
 
   return al;
 }
@@ -84,6 +85,7 @@ int main(int argc, char **argv) {
   printf("\n");
 
   // cleanup because we are nice
+  free(al->array);
   free(al);
 
   exit(EXIT_SUCCESS);

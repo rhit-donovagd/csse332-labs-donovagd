@@ -1,0 +1,6 @@
+unsorted list: 
+	 [  100   45   89   27  317   17 ]
+list in order: 
+	 [  100  317   45   89   27   17 ]
+test if 42 is in the array...
+	NO

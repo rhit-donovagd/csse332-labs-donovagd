@@ -1,0 +1,15 @@
++r
+Starting program: /home/donovagd/332-labs/debug/selection.bin 
+
+Program received signal SIGSEGV, Segmentation fault.
+0x00005555555551ca in selection_sort (A=0x7fffffffe0c0, size=6) at selection.c:14
+14	      if(A[j] > A[max])
++p j
+$1 = 976
++p max
+$2 = 954
++p A
+$3 = (int *) 0x7fffffffe0c0
++p A[j]
+Cannot access memory at address 0x7ffffffff000
++q

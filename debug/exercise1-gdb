@@ -1,0 +1,13 @@
++r
+Starting program: /home/donovagd/332-labs/debug/al.bin 
+
+Program received signal SIGSEGV, Segmentation fault.
+0x00005555555552b3 in main (argc=1, argv=0x7fffffffe1d8) at al.c:77
+77	    al->array[i] = i;
++p i
+$1 = 0
++p al
+$2 = (struct array_list *) 0x5555555592a0
++p al->array
+$3 = (int *) 0x0
++q

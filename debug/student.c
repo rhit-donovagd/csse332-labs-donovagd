@@ -76,9 +76,10 @@ struct student *alloc_student(const char *name) {
   }
 
   // copy the name
-  st->name = malloc(strlen(name) + 1); // ENG POINT: why strlen(name) + 1?
+  st->name = malloc(strlen(name) + 1); // ENG POINT: why strlen(name) + 1? null terminator
   strncpy(st->name, name, strlen(name));
   *(st->name + strlen(name)) = 0;
+  st->grades = malloc(sizeof(int) * NUM_EXAMS);
 
   // initialize the list node
   init_node(&st->node);

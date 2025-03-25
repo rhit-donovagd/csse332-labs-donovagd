@@ -1,0 +1,81 @@
++r
+Starting program: /home/donovagd/332-labs/debug/student.bin 
+[Inferior 1 (process 5062) exited with code 01]
++b test1
+Breakpoint 1 at 0x5555555556af: file student.c, line 188.
++r
+Starting program: /home/donovagd/332-labs/debug/student.bin 
+
+Breakpoint 1, test1 () at student.c:188
+188	int test1(void) {
++n
+189	  struct student *st = alloc_student("Mohammad");
++n
+192	  printf("Test 1 (simple add_head): ");
++p st
+$1 = (struct student *) 0x5555555592a0
++n
+193	  add_head(&head, &st->node);
++s
+add_head (head=0x555555555ac0 <__libc_csu_init>, node=0x555555554040) at sllist.c:33
+33	{
++k
+[Inferior 1 (process 5108) killed]
++r
+`/home/donovagd/332-labs/debug/student.bin' has disappeared; keeping its symbols.
+Starting program: /home/donovagd/332-labs/debug/student.bin 
+During startup program exited with code 127.
++r
+`/home/donovagd/332-labs/debug/student.bin' has changed; re-reading symbols.
+Starting program: /home/donovagd/332-labs/debug/student.bin 
+warning: Probes-based dynamic linker interface failed.
+Reverting to original interface.
+
+Breakpoint 1, test1 () at student.c:188
+188	int test1(void) {
++n
+189	  struct student *st = alloc_student("Mohammad");
++n
+192	  printf("Test 1 (simple add_head): ");
++n
+193	  add_head(&head, &st->node);
++n
+194	  if(IS_EMPTY(head)) {
++n
+200	  if(head.next != &st->node) {
++n
+206	  del_node(&head, &st->node);
++n
+207	  if(!IS_EMPTY(head)) {
++c
+Continuing.
+[Inferior 1 (process 5162) exited with code 01]
++k
+The program is not being run.
++r
+`/home/donovagd/332-labs/debug/student.bin' has changed; re-reading symbols.
+Starting program: /home/donovagd/332-labs/debug/student.bin 
+warning: Probes-based dynamic linker interface failed.
+Reverting to original interface.
+
+Breakpoint 1, test1 () at student.c:188
+188	int test1(void) {
++c
+Continuing.
+[Inferior 1 (process 5189) exited with code 01]
++clear 188
+
+Deleted breakpoint 1 +r
+`/home/donovagd/332-labs/debug/student.bin' has changed; re-reading symbols.
+Starting program: /home/donovagd/332-labs/debug/student.bin 
+warning: Probes-based dynamic linker interface failed.
+Reverting to original interface.
+[Inferior 1 (process 5200) exited normally]
++k
+The program is not being run.
++r
+Starting program: /home/donovagd/332-labs/debug/student.bin 
+warning: Probes-based dynamic linker interface failed.
+Reverting to original interface.
+[Inferior 1 (process 5201) exited normally]
++q
