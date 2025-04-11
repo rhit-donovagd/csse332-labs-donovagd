@@ -75,12 +75,25 @@ void MergeSort(int array[], int inputLength) {
     MergeSort(array, mid);
     MergeSort(array + mid, inputLength - mid);
     // merge's last input is an inclusive index
-    printf("calling merge 0->%d, 1->%d\n mid %d\n",array[0], array[1], mid); 
+    //printf("calling merge 0->%d, 1->%d\n mid %d\n",array[0], array[1], mid); 
     Merge(array, 0, mid, inputLength - 1);
   }
 }
 
 // you might want some globals, put them here
+struct thread_args {
+    int sort;
+    int* array;
+    int start;
+    int len;
+};
+
+struct durations {
+    int count;
+    suseconds_t total;
+    suseconds_t min;
+    suseconds_t max;
+} brute, bubble, merge;
 
 // here's a global I used you might find useful
 char* descriptions[] = {"brute force","bubble","merge"};
@@ -90,7 +103,76 @@ char* descriptions[] = {"brute force","bubble","merge"};
 //
 // you can do it a different way but I think this is easiest
 void* thread_dispatch(void* data) {
+    struct thread_args* args = (struct thread_args*)data;
+    printf("Sorting indexes %d-%d with %s\n", args->start, args->start + args->len - 1, descriptions[args->sort]);
+    sleep(1);
+    struct timeval startt, stopt;
+    suseconds_t usecs_passed;
+    gettimeofday(&startt, NULL);
+    switch (args->sort) {
+	case 0:
+	    BruteForceSort(args->array + args->start, args->len);
+	    break;
+	case 1:
+	    BubbleSort(args->array + args->start, args->len);
+	    break;
+	case 2:
+	    MergeSort(args->array + args->start, args->len);
+	    break;
+    }
+    gettimeofday(&stopt, NULL);
+    usecs_passed = stopt.tv_usec - startt.tv_usec;
+    printf("Sorting indexes %d-%d with %s done in %d usecs\n", args->start, args->start + args->len - 1, descriptions[args->sort], usecs_passed);
 
+    switch (args->sort) {
+	case 0:
+	    if (brute.count == 0) {
+		brute.count = 1;
+		brute.total = usecs_passed;
+		brute.min = usecs_passed;
+		brute.max = usecs_passed;
+	    } else {
+		brute.count += 1;
+		brute.total += usecs_passed;
+		if (usecs_passed < brute.min)
+		    brute.min = usecs_passed;
+		if (usecs_passed > brute.max)
+		    brute.max = usecs_passed;
+	    }
+	    break;
+	case 1:
+	    if (bubble.count == 0) {
+		bubble.count = 1;
+		bubble.total = usecs_passed;
+		bubble.min = usecs_passed;
+		bubble.max = usecs_passed;
+	    } else {
+		bubble.count += 1;
+		bubble.total += usecs_passed;
+		if (usecs_passed < bubble.min)
+		    bubble.min = usecs_passed;
+		if (usecs_passed > bubble.max)
+		    bubble.max = usecs_passed;
+	    }
+	    break;
+	case 2:
+	    if (merge.count == 0) {
+		merge.count = 1;
+		merge.total = usecs_passed;
+		merge.min = usecs_passed;
+		merge.max = usecs_passed;
+	    } else {
+		merge.count += 1;
+		merge.total += usecs_passed;
+		if (usecs_passed < merge.min)
+		    merge.min = usecs_passed;
+		if (usecs_passed > merge.max)
+		    merge.max = usecs_passed;
+	    }
+	    break;
+    }
+
+    free(args);
 }
 
 int main(int argc, char** argv) {
@@ -132,11 +214,30 @@ int main(int argc, char** argv) {
     // inspect and ensure you're sorting everything
   }
 
+  brute.count = 0;
+  bubble.count = 0;
+  merge.count = 0;
+
   // create your threads here
+  pthread_t threads[n];
+  for (int i = 0; i < n; i++) {
+    struct thread_args* args = malloc(sizeof(struct thread_args));
+    args->sort = i % 3;
+    args->array = data_array;
+    args->start = i * vals_per_thread;
+    args->len = vals_per_thread;
+    pthread_create(&threads[i], NULL, thread_dispatch, (void*)args);
+  }
 
   // wait for them to finish
+  for (int i = 0; i < n; i++) {
+    pthread_join(threads[i], NULL);
+  }
 
   // print out the algorithm summary statistics
+  printf("brute force avg %.6f min %d max %d\n", (float)brute.total / (float)brute.count, brute.min, brute.max);
+  printf("bubble force avg %.6f min %d max %d\n", (float)bubble.total / (float)bubble.count, bubble.min, bubble.max);
+  printf("merge force avg %.6f min %d max %d\n", (float)merge.total / (float)merge.count, merge.min, merge.max);
 
   // print out the result array so you can see the sorting is working
   // you might want to comment this out if you're testing with large data sets

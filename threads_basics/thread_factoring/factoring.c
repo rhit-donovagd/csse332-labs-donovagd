@@ -21,11 +21,33 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <pthread.h>
+#include <stdlib.h>
 
+struct factor_args {
+  int thread_index;
+  int target;
+  int inc;
+};
+
+void* factor(void* args_void) {
+    struct factor_args* args = (struct factor_args*)args_void;
+
+    for (int i = 2 + args->thread_index; i <= args->target / 2; i += args->inc) {
+	/* You'll want to keep this testing line in.  Otherwise it goes so
+	   fast it can be hard to detect your code is running in
+	   parallel. Also test with a large number (i.e. > 3000) */
+	printf("thread %d: testing %d\n", args->thread_index, i);
+	if (args->target % i == 0) {
+	  printf("%d is a factor\n", i);
+	}
+    }
+
+    return NULL;
+}
 
 int main(void) {
   /* you can ignore the linter warning about this */
-  unsigned long long int target, i, start = 0;
+  unsigned long long target, i;
   int numThreads;
   printf("Give a number to factor.\n");
   scanf("%llu", &target);
@@ -37,15 +59,22 @@ int main(void) {
     return 0;
   }
 
-  for (i = 2; i <= target/2; i = i + 1) {
-    /* You'll want to keep this testing line in.  Otherwise it goes so
-       fast it can be hard to detect your code is running in
-       parallel. Also test with a large number (i.e. > 3000) */
-    printf("testing %llu\n", i);
-    if (target % i == 0) {
-      printf("%llu is a factor\n", i);
-    }
+  pthread_t threads[numThreads];
+  struct factor_args* thread_args[numThreads];
+  for (i = 0; i < numThreads; i++) {
+    struct factor_args* args = malloc(sizeof(struct factor_args));
+    args->thread_index = i;
+    args->target = target;
+    args->inc = numThreads;
+    thread_args[i] = args;
+
+    pthread_create(&threads[i], NULL, factor, (void*)(thread_args[i]));
   }
+
+  for (i = 0; i < numThreads; i++) {
+    pthread_join(threads[i], NULL);
+  }
+
   return 0;
 }
 

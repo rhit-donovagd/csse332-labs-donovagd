@@ -42,24 +42,35 @@ If your code is right you should see an alternating Start/End
 
 */
 
+pthread_mutex_t red_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t blue_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 void redCommand() {
+  pthread_mutex_lock(&red_mutex);
   printf("Start: Red\n");
   usleep(100);
   printf("End  : Red\n");
+  pthread_mutex_unlock(&red_mutex);
 }
 
 void blueCommand() {
+  pthread_mutex_lock(&blue_mutex);
   printf("Start: Blue\n");
   usleep(100);
   printf("End  : Blue\n");
+  pthread_mutex_unlock(&blue_mutex);
 }
 
 void purpleCommand() {
+  pthread_mutex_lock(&blue_mutex);
+  pthread_mutex_lock(&red_mutex);
   printf("Start: Blue\n");
   printf("Start: Red\n");
   usleep(100);
   printf("End  : Red\n");
   printf("End  : Blue\n");
+  pthread_mutex_unlock(&red_mutex);
+  pthread_mutex_unlock(&blue_mutex);
 }
 
 void whiteCommand() {

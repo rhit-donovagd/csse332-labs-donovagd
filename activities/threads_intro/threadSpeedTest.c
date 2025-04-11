@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include <wait.h>
 
-#define WORK_SIZE 20000
+#define WORK_SIZE 60000
 
 // Many thanks to Micah for the initial starting code (which I have modified
 // significantly)
@@ -28,7 +28,7 @@
 
    */
 
-#define THREAD_COUNT 5
+#define THREAD_COUNT 10
 
 float* dest;
 
@@ -51,7 +51,8 @@ int power(int a, int b) {
 
 void* threadFun(void* startingInt) {
 	int start = *((int*)startingInt);
-	for (int i = start; i < WORK_SIZE; i += 2) {
+	printf("I'm starting with %d\n", start);
+	for (int i = start; i < WORK_SIZE; i += THREAD_COUNT) {
 		dest[i] = power(i, i);
 	}
 }
@@ -85,10 +86,20 @@ int main(int argc, char** argv) {
 	output_time_difference("fork", &start, &end);
 
 	// PART 3: ------------------------use pthreads
-
 	gettimeofday(&start, NULL);
 
   // TODO: Add your code here.....
+	pthread_t threads[THREAD_COUNT];
+	int params[THREAD_COUNT];
+	for (int i = 0; i < THREAD_COUNT; i++) {
+	    params[i] = i;
+	    pthread_create(&threads[i], NULL, threadFun, &params[i]);
+	}
+
+	for (int i = 0; i < THREAD_COUNT; i++) {
+	    pthread_join(threads[i], NULL);
+	}
+
 
 	gettimeofday(&end, NULL);
 
