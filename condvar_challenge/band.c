@@ -57,16 +57,96 @@ int GUIT = 2;
 
 char* names[] = {"drummer", "singer", "guitarist"};
 
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t drummer_left_stage = PTHREAD_COND_INITIALIZER;
+pthread_cond_t singer_left_stage = PTHREAD_COND_INITIALIZER;
+pthread_cond_t guitarist_left_stage = PTHREAD_COND_INITIALIZER;
+pthread_cond_t band_ready = PTHREAD_COND_INITIALIZER;
+int drummer_queued = 0;
+int singer_queued = 0;
+int guitarist_queued = 0;
+int drummer_playing = 0;
+int singer_playing = 0;
+int guitarist_playing = 0;
 
 
 // because the code is similar, we'll just have one kind of thread
 // and we'll pass its kind as a parameter
 void* friend(void * kind_ptr) {
   int kind = *((int*) kind_ptr);
+  pthread_mutex_lock(&mutex);
   printf("%s arrived\n", names[kind]);
+  switch (kind) {
+    case 0:
+        while (drummer_playing || drummer_queued) {
+	  pthread_cond_wait(&drummer_left_stage, &mutex);
+        }
+	printf("%s queuing\n", names[kind]);
+        drummer_queued = 1;
+        break;
+    case 1:
+        while (singer_playing || singer_queued) {
+	  pthread_cond_wait(&singer_left_stage, &mutex);
+        }
+	printf("%s queuing\n", names[kind]);
+	singer_queued = 1;
+	break;
+    case 2:
+        while (guitarist_playing || guitarist_queued) {
+	  pthread_cond_wait(&guitarist_left_stage, &mutex);
+        }
+	printf("%s queuing\n", names[kind]);
+	guitarist_queued = 1;
+	break;
+  }
+
+  //int ready_to_play = (drummer_queued && singer_queued && guitarist_queued) && !(drummer_playing || singer_playing || guitarist_playing);
+  int ready_to_play = drummer_queued && singer_queued && guitarist_queued;
+  if (ready_to_play) {
+    printf("broadcasting...\n");
+    pthread_cond_broadcast(&band_ready);
+  }
+
+  while (!ready_to_play) {
+    pthread_cond_wait(&band_ready, &mutex);
+  }
+
   printf("%s playing\n", names[kind]);
+  switch (kind) {
+    case 0:
+        drummer_playing = 1;
+        break;
+    case 1:
+	singer_playing = 1;
+	break;
+    case 2:
+	guitarist_playing = 1;
+	break;
+  }
+  pthread_mutex_unlock(&mutex);
+
   sleep(1);
+
+  pthread_mutex_lock(&mutex);
+  switch (kind) {
+    case 0:
+        drummer_playing = 0;
+        drummer_queued = 0;
+        pthread_cond_signal(&drummer_left_stage);
+        break;
+    case 1:
+	singer_playing = 0;
+        singer_queued = 0;
+        pthread_cond_signal(&singer_left_stage);
+	break;
+    case 2:
+	guitarist_playing = 0;
+        guitarist_queued = 0;
+        pthread_cond_signal(&guitarist_left_stage);
+	break;
+  }
   printf("%s finished playing\n", names[kind]);
+  pthread_mutex_unlock(&mutex);
 
   return NULL;
 }
